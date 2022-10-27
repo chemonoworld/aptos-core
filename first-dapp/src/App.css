@@ -41,6 +41,8 @@
 a,
 input,
 textarea {
+  color: black;
+  background-color: rgba(0, 0, 0, 0.2);
   display: block;
 }
 
