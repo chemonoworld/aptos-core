@@ -1,6 +1,6 @@
 /// This module provides the foundation for Tokens.
 /// Checkout our developer doc on our token standard https://aptos.dev/concepts/coin-and-token/aptos-token
-module aptos_token::token {
+module aptos_soul_bound_token::token {
     use std::error;
     use std::option::{Self, Option};
     use std::signer;
@@ -448,40 +448,40 @@ module aptos_token::token {
     // Transaction Entry functions
     //
 
-    public entry fun direct_transfer_script(
-        sender: &signer,
-        receiver: &signer,
-        creators_address: address,
-        collection: String,
-        name: String,
-        property_version: u64,
-        amount: u64,
-    ) acquires TokenStore {
-        let token_id = create_token_id_raw(creators_address, collection, name, property_version);
-        direct_transfer(sender, receiver, token_id, amount);
-    }
+    // public entry fun direct_transfer_script(
+    //     sender: &signer,
+    //     receiver: &signer,
+    //     creators_address: address,
+    //     collection: String,
+    //     name: String,
+    //     property_version: u64,
+    //     amount: u64,
+    // ) acquires TokenStore {
+    //     let token_id = create_token_id_raw(creators_address, collection, name, property_version);
+    //     direct_transfer(sender, receiver, token_id, amount);
+    // }
 
-    public entry fun opt_in_direct_transfer(account: &signer, opt_in: bool) acquires TokenStore {
-        let addr = signer::address_of(account);
-        initialize_token_store(account);
-        let opt_in_flag = &mut borrow_global_mut<TokenStore>(addr).direct_transfer;
-        *opt_in_flag = opt_in;
-    }
+    // public entry fun opt_in_direct_transfer(account: &signer, opt_in: bool) acquires TokenStore {
+    //     let addr = signer::address_of(account);
+    //     initialize_token_store(account);
+    //     let opt_in_flag = &mut borrow_global_mut<TokenStore>(addr).direct_transfer;
+    //     *opt_in_flag = opt_in;
+    // }
 
     /// Transfers `amount` of tokens from `from` to `to`.
     /// The receiver `to` has to opt-in direct transfer first
-    public entry fun transfer_with_opt_in(
-        from: &signer,
-        creator: address,
-        collection_name: String,
-        token_name: String,
-        token_property_version: u64,
-        to: address,
-        amount: u64,
-    ) acquires TokenStore {
-        let token_id = create_token_id_raw(creator, collection_name, token_name, token_property_version);
-        transfer(from, token_id, to, amount);
-    }
+    // public entry fun transfer_with_opt_in(
+    //     from: &signer,
+    //     creator: address,
+    //     collection_name: String,
+    //     token_name: String,
+    //     token_property_version: u64,
+    //     to: address,
+    //     amount: u64,
+    // ) acquires TokenStore {
+    //     let token_id = create_token_id_raw(creator, collection_name, token_name, token_property_version);
+    //     transfer(from, token_id, to, amount);
+    // }
 
     /// Burn a token by creator when the token's BURNABLE_BY_CREATOR is true
     /// The token is owned at address owner
@@ -799,6 +799,8 @@ module aptos_token::token {
         token_id: TokenId,
         amount: u64,
     ) acquires TokenStore {
+        // sender가 creator여야 함
+        // assert!()
         let token = withdraw_token(sender, token_id, amount);
         deposit_token(receiver, token);
     }
@@ -845,17 +847,17 @@ module aptos_token::token {
     }
 
     /// Transfers `amount` of tokens from `from` to `to`.
-    public fun transfer(
-        from: &signer,
-        id: TokenId,
-        to: address,
-        amount: u64,
-    ) acquires TokenStore {
-        let opt_in_transfer = borrow_global<TokenStore>(to).direct_transfer;
-        assert!(opt_in_transfer, error::permission_denied(EUSER_NOT_OPT_IN_DIRECT_TRANSFER));
-        let token = withdraw_token(from, id, amount);
-        direct_deposit(to, token);
-    }
+    // public fun transfer(
+    //     from: &signer,
+    //     id: TokenId,
+    //     to: address,
+    //     amount: u64,
+    // ) acquires TokenStore {
+    //     let opt_in_transfer = borrow_global<TokenStore>(to).direct_transfer;
+    //     assert!(opt_in_transfer, error::permission_denied(EUSER_NOT_OPT_IN_DIRECT_TRANSFER));
+    //     let token = withdraw_token(from, id, amount);
+    //     direct_deposit(to, token);
+    // }
 
 
     /// Token owner can create this one-time withdraw capability with an expiration time
@@ -1134,9 +1136,9 @@ module aptos_token::token {
         let all_token_data = &mut borrow_global_mut<Collections>(creator_addr).token_data;
         // 토큰 아이디와 같은 토큰이 있는지 확인
         assert!(table::contains(all_token_data, token_data_id), error::not_found(ETOKEN_DATA_NOT_PUBLISHED));
-        //있으면 가져와서 token_data에 저장하고
+        //있으면 가져와서 token_data에 저장하고 
         let token_data = table::borrow_mut(all_token_data, token_data_id);
-        // 이번에 발행되는 양이 maximum을 초과하지 않는지 검사하고
+        // 이번에 발행되는 양이 maximum을 초과하지 않는지 검사하고 
         if (token_data.maximum > 0) {
             assert!(token_data.supply + amount <= token_data.maximum, error::invalid_argument(EMINT_WOULD_EXCEED_TOKEN_MAXIMUM));
             token_data.supply = token_data.supply + amount;

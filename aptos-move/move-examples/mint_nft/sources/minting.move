@@ -141,19 +141,26 @@ module mint_nft::minting {
     /// `mint_proof_signature` should be the `MintProofChallenge` signed by the resource signer's private key
     /// `public_key_bytes` should be the public key of the resource signer
     public entry fun mint_nft(receiver: &signer, mint_proof_signature: vector<u8>) acquires CollectionTokenMinter {
+        // 받을 사람 주소
         let receiver_addr = signer::address_of(receiver);
 
         // get the collection minter and check if the collection minting is disabled or expired
+        // 컬렉션 토큰 민터
         let collection_token_minter = borrow_global_mut<CollectionTokenMinter>(@mint_nft);
+        // 타임스탬프가 만료시간보다 전이여야함
         assert!(timestamp::now_seconds() < collection_token_minter.expiration_timestamp, error::permission_denied(ECOLLECTION_EXPIRED));
+        // 민팅 가능한지 확인
         assert!(collection_token_minter.minting_enabled, error::permission_denied(EMINTING_DISABLED));
 
         // verify that the `mint_proof_signature` is valid against the collection token minter's public key
         verify_proof_of_knowledge(receiver_addr, mint_proof_signature, collection_token_minter.token_data_id, collection_token_minter.public_key);
 
         // mint token to the receiver
+        // 컬렉션 토큰 민터 서명 가능하게
         let resource_signer = account::create_signer_with_capability(&collection_token_minter.signer_cap);
+        // 토큰 민팅
         let token_id = token::mint_token(&resource_signer, collection_token_minter.token_data_id, 1);
+        // 컬렉션 토큰 민터만 리시버한테 토큰 보낼수 있게 하면 될듯..?(SBT)
         token::direct_transfer(&resource_signer, receiver, token_id, 1);
 
         event::emit_event<TokenMintingEvent>(
@@ -166,6 +173,7 @@ module mint_nft::minting {
 
         // mutate the token properties to update the property version of this token
         let (creator_address, collection, name) = token::get_token_data_id_fields(&collection_token_minter.token_data_id);
+        // token property 변경
         token::mutate_token_properties(
             &resource_signer,
             receiver_addr,
@@ -182,6 +190,7 @@ module mint_nft::minting {
 
     /// Verify that the collection token minter intends to mint the given token_data_id to the receiver
     fun verify_proof_of_knowledge(receiver_addr: address, mint_proof_signature: vector<u8>, token_data_id: TokenDataId, public_key: ValidatedPublicKey) {
+        // 시퀀스 넘버
         let sequence_number = account::get_sequence_number(receiver_addr);
 
         let proof_challenge = MintProofChallenge {
@@ -190,7 +199,9 @@ module mint_nft::minting {
             token_data_id,
         };
 
+        // minting proof 시그니처
         let signature = ed25519::new_signature_from_bytes(mint_proof_signature);
+        // unvaliated public key랑 proof challenge랑 시그니처랑 맞춰보는
         let unvalidated_public_key = ed25519::public_key_to_unvalidated(&public_key);
         assert!(ed25519::signature_verify_strict_t(&signature, &unvalidated_public_key, proof_challenge), error::invalid_argument(EINVALID_PROOF_OF_KNOWLEDGE));
     }

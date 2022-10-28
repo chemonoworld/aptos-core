@@ -3,7 +3,7 @@ name = "Examples"
 version = "0.0.0"
 
 [addresses]
-hello_blockchain = "_"
+hello_blockchain = "0x10656bc042639da94238e21f0ba00779d103ee7150a316f1c82b3319b1db6824"
 
 [dependencies]
 AptosFramework = { local = "../../framework/aptos-framework" }

@@ -1,4 +1,4 @@
-module hello_blockchain::message {
+module 0x10656bc042639da94238e21f0ba00779d103ee7150a316f1c82b3319b1db6824::message {
     use std::error;
     use std::signer;
     use std::string;
